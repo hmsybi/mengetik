@@ -1,0 +1,1 @@
+export default function App(){return <h1>Typing Sekolah Bening Fixed</h1>}
