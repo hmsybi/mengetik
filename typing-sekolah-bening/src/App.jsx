@@ -1,39 +1,115 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  addDoc,
+  collection,
+  onSnapshot,
+  query
+} from "firebase/firestore";
+import { db } from "./firebase";
+
+const siswa = {
+  "5": [
+    "Abdullah Al Fauzan",
+    "Adkhilni Mufida Shidqi",
+    "Akifah Farah Harania Isfandi",
+    "Athar Raditya Maher",
+    "Devia Pritha Prameswari",
+    "Fatimah Adzika Qurani",
+    "Ghumaisha Al Mecca",
+    "Hafiza Khaira Lubna",
+    "Hafuza Ahnaf Hendrawan",
+    "Muhammad Ali Zhafran A Shori",
+    "Nabil Pamungkas Pohan",
+    "Naomi Azkia Zahra",
+    "Noureen Humaira Syazaira",
+    "R Adhskan Shaliq",
+    "Reyvasha Dzakirra Aftani",
+    "Yusuf Abdullah Basalamah",
+    "Zhafira Azzahra"
+  ],
+
+  "6AG": [
+    "Abrar Wildan Hanif",
+    "Adiba Kanza Azzuni",
+    "Aisyah Azmi Maulani",
+    "Alesha Naila Zahran",
+    "Bagas Dwi Putra",
+    "Farzan Ahza Khairi Noer",
+    "Kevin Ghifarial Alif",
+    "Kirana Larasati",
+    "Mahran Sakhi Arundati",
+    "Muhammad Aulia Hanif",
+    "Muhammad Hafidz Al Faith",
+    "Muhammad Zabran A",
+    "Nasyitha Zhafra A",
+    "Queisha Qatrunnada R",
+    "Raveena Naira Khafiya L",
+    "Rayyan Ibaadurrahman",
+    "Sultan Bagus Farzana",
+    "Yumna Alika Qeis",
+    "Amira Gyantika Mulia"
+  ],
+
+  "6TBZ": [
+    "Acquila Arsyila Shina",
+    "Alfar Abiela Wijaya",
+    "Alika Naila Putri Handoko",
+    "Annisa Hasna Afifah",
+    "Annora Sava Ghassany",
+    "Ayesha Safiya Hamdania",
+    "Dean Sulthani Yusuf",
+    "Faith Asyja Ahnaf Al F",
+    "Felicia Fayruz Fernandez",
+    "Hamizan Ihsan Fadhil Z",
+    "Luqman Habibie Thalib",
+    "Mahira Hasna Kamila",
+    "Michaela Mahira M Z",
+    "Muhammad Daffarel Jibran",
+    "M Fayyaz Hafidzul R",
+    "Rio Aprilio",
+    "Senandung Bunga Insyira M",
+    "Najla Alimatul Qarirah",
+    "Aqila Zahra Afandi"
+  ]
+};
+
+const kata =
+  "visi sekolah bening islami beradab berani berkarya literasi potensi keterampilan masa depan".split(
+    " "
+  );
+
+function acakText() {
+  return [...kata].sort(() => Math.random() - 0.5).join(" ");
+}
 
 export default function App() {
   const rankingRef = useRef(null);
 
-  const siswa = {
-    "5": ["Abdullah", "Fatimah", "Yusuf", "Naomi"],
-    "6AG": ["Abrar", "Kevin", "Kirana", "Yumna"],
-    "6TBZ": ["Acquila", "Dean", "Rio", "Najla"]
-  };
-
-  const words =
-    "visi sekolah bening islami beradab berani berkarya literasi potensi keterampilan masa depan".split(
-      " "
-    );
-
-  const randomText = () =>
-    [...words].sort(() => Math.random() - 0.5).join(" ");
-
   const [kelas, setKelas] = useState("");
   const [nama, setNama] = useState("");
-  const [text, setText] = useState(randomText());
+  const [text, setText] = useState(acakText());
   const [typed, setTyped] = useState("");
   const [started, setStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(90);
-  const [results, setResults] = useState(() => {
-    const x = localStorage.getItem("typing-premium");
-    return x ? JSON.parse(x) : [];
-  });
+  const [results, setResults] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem("typing-premium", JSON.stringify(results));
-  }, [results]);
+    const q = query(collection(db, "results"));
+
+    const unsub = onSnapshot(q, (snap) => {
+      const data = snap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setResults(data);
+    });
+
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     if (!started) return;
+
     if (timeLeft <= 0) {
       finish();
       return;
@@ -44,57 +120,41 @@ export default function App() {
   }, [started, timeLeft]);
 
   const stats = useMemo(() => {
-    const wordsCount = typed.trim().split(/\s+/).filter(Boolean).length;
+    const words = typed.trim().split(/\s+/).filter(Boolean).length;
 
     let correct = 0;
     for (let i = 0; i < typed.length; i++) {
       if (typed[i] === text[i]) correct++;
     }
 
-    const typo = typed.length - correct;
     const accuracy = typed.length
       ? Math.round((correct / typed.length) * 100)
       : 0;
 
     const used = Math.max(1, 90 - timeLeft);
-    const wpm = Math.round(wordsCount / (used / 60));
+    const wpm = Math.round(words / (used / 60));
 
     const score = Math.round((correct * 2 + wpm) / 5);
 
-    return { correct, typo, accuracy, wpm, score };
+    return { correct, accuracy, wpm, score };
   }, [typed, text, timeLeft]);
 
-  function finish() {
-    if (!kelas || !nama) return;
+  async function finish() {
+    if (!nama || !kelas) return;
 
     setStarted(false);
 
-    const row = {
+    await addDoc(collection(db, "results"), {
       nama,
       kelas,
       ...stats,
-      date: new Date().toLocaleString("id-ID")
-    };
-
-    setResults((prev) => {
-      const same = prev.findIndex(
-        (x) => x.nama === nama && x.kelas === kelas
-      );
-
-      if (same >= 0) {
-        if (row.score > prev[same].score) {
-          const copy = [...prev];
-          copy[same] = row;
-          return copy;
-        }
-        return prev;
-      }
-
-      return [...prev, row];
+      createdAt: new Date().toISOString()
     });
 
     setTimeout(() => {
-      rankingRef.current?.scrollIntoView({ behavior: "smooth" });
+      rankingRef.current?.scrollIntoView({
+        behavior: "smooth"
+      });
     }, 300);
   }
 
@@ -104,44 +164,52 @@ export default function App() {
     setTyped("");
     setStarted(false);
     setTimeLeft(90);
-    setText(randomText());
+    setText(acakText());
   }
 
   function exportCSV() {
-    const header =
-      "Rank,Nama,Kelas,Benar,WPM,Nilai,Accuracy,Tanggal\n";
+    const rows = ranked.map(
+      (r) =>
+        `${r.rank},${r.nama},${r.kelas},${r.correct},${r.wpm},${r.score}`
+    );
 
-    const rows = ranked
-      .map(
-        (r) =>
-          `${r.rank},${r.nama},${r.kelas},${r.correct},${r.wpm},${r.score},${r.accuracy}%,${r.date}`
-      )
-      .join("\n");
+    const csv =
+      "Rank,Nama,Kelas,Benar,WPM,Nilai\n" + rows.join("\n");
 
-    const blob = new Blob([header + rows], {
+    const blob = new Blob([csv], {
       type: "text/csv;charset=utf-8;"
     });
 
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = "hasil-lomba-typing.csv";
+    link.download = "ranking-typing.csv";
     link.click();
   }
 
-  const ranked = [...results]
+  const best = {};
+
+  results.forEach((r) => {
+    const key = r.kelas + "-" + r.nama;
+
+    if (!best[key] || r.score > best[key].score) {
+      best[key] = r;
+    }
+  });
+
+  const ranked = Object.values(best)
     .sort(
       (a, b) =>
         b.score - a.score ||
         b.correct - a.correct ||
         b.wpm - a.wpm
     )
-    .map((x, i) => ({ ...x, rank: i + 1 }));
+    .map((r, i) => ({ ...r, rank: i + 1 }));
 
   return (
     <div style={styles.page}>
       <div style={styles.card}>
         <h1 style={styles.title}>
-          🏆 SEKOLAH BENING - TYPING PREMIUM
+          🏆 SEKOLAH BENING TYPING ULTIMATE
         </h1>
 
         <div style={styles.grid}>
@@ -165,6 +233,7 @@ export default function App() {
             style={styles.input}
           >
             <option value="">Pilih Nama</option>
+
             {(siswa[kelas] || []).map((x) => (
               <option key={x}>{x}</option>
             ))}
@@ -201,18 +270,18 @@ export default function App() {
         </div>
 
         <div style={styles.actions}>
-          <button onClick={restart} style={styles.btnBlue}>
+          <button style={styles.btnBlue} onClick={restart}>
             🔄 Mulai Lagi
           </button>
 
-          <button onClick={exportCSV} style={styles.btnGold}>
+          <button style={styles.btnGold} onClick={exportCSV}>
             📊 Export Excel
           </button>
         </div>
       </div>
 
       <div style={styles.card} ref={rankingRef}>
-        <h2>🏆 Ranking Live</h2>
+        <h2>🏆 Rank</h2>
 
         <table style={styles.table}>
           <thead>
@@ -254,15 +323,15 @@ export default function App() {
 
 const styles = {
   page: {
-    background: "#eef3ff",
     minHeight: "100vh",
+    background: "#eef3ff",
     padding: 20,
     fontFamily: "Arial"
   },
   card: {
     background: "#fff",
-    borderRadius: 14,
     padding: 20,
+    borderRadius: 14,
     marginBottom: 20,
     boxShadow: "0 8px 20px rgba(0,0,0,.08)"
   },
@@ -296,10 +365,10 @@ const styles = {
     padding: 12
   },
   stats: {
+    marginTop: 15,
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))",
-    gap: 10,
-    marginTop: 15
+    gap: 10
   },
   actions: {
     display: "flex",
