@@ -74,7 +74,7 @@ const siswa = {
 };
 
 const kata =
-  "visi sekolah bening islami beradab berani berkarya literasi potensi keterampilan masa depan".split(
+  "visi terwujudnya peserta didik yang islami beradab berani dan berkarya menanamkan konsep islam sebagai pandangan hidup menanamkan siswa untuk berakhlak mulia membangun budaya literasi memfasilitasi penemuan potensi diri memfasilitasi dan mengasah keterampilan".split(
     " "
   );
 
