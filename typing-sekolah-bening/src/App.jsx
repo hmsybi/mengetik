@@ -245,6 +245,8 @@ export default function App() {
         <div style={styles.textBox}>{text}</div>
 
         <textarea
+          onPaste={(e) => e.preventDefault()}
+          onDrop={(e) => e.preventDefault()}
           style={styles.textarea}
           disabled={!kelas || !nama || timeLeft <= 0}
           value={typed}
