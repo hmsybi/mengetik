@@ -242,7 +242,13 @@ export default function App() {
 
         <h2 style={styles.timer}>⏰ {timeLeft} detik</h2>
 
-        <div style={styles.textBox}>{text}</div>
+        <div style={styles.textBox}
+          onCopy={(e) => e.preventDefault()}
+          onCut={(e) => e.preventDefault()}
+          style={{ userSelect: "none" }}
+          >
+          {text}
+        </div>
 
         <textarea
           onPaste={(e) => e.preventDefault()}
