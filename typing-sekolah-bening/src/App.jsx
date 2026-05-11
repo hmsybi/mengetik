@@ -404,6 +404,6 @@ const styles = {
     borderCollapse: "collapse"
   },
     th: {
-    textAlign: "left";
+    textAlign: "left"
   }
 };
