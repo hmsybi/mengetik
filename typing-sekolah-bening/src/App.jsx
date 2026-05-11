@@ -292,7 +292,7 @@ export default function App() {
         <h2>🏆 Rank</h2>
 
         <table style={styles.table}>
-          <thead>
+          <thead style={styles.th}>
             <tr>
               <th>Rank</th>
               <th>Nama</th>
@@ -402,5 +402,8 @@ const styles = {
   table: {
     width: "100%",
     borderCollapse: "collapse"
+  },
+    th: {
+    textAlign: "left";
   }
 };
