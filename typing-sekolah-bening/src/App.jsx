@@ -174,7 +174,7 @@ export default function App() {
     );
 
     const csv =
-      "Rank,Nama,Kelas,Benar,WPM,Nilai\n" + rows.join("\n");
+      "Rank,Nama,Kelas,Benar,WPM,Poin\n" + rows.join("\n");
 
     const blob = new Blob([csv], {
       type: "text/csv;charset=utf-8;"
@@ -274,7 +274,7 @@ export default function App() {
           <div>Benar: {stats.correct}</div>
           <div>WPM: {stats.wpm}</div>
           <div>Accuracy: {stats.accuracy}%</div>
-          <div>Nilai: {stats.score}</div>
+          <div>Poin: {stats.score}</div>
         </div>
 
         <div style={styles.actions}>
@@ -299,7 +299,7 @@ export default function App() {
               <th>Kelas</th>
               <th>Benar</th>
               <th>WPM</th>
-              <th>Nilai</th>
+              <th>Poin</th>
             </tr>
           </thead>
 
