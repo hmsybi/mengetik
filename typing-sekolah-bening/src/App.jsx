@@ -319,8 +319,7 @@ export default function App() {
     <option value="6TBZ">Kelas 6 TBZ</option>
   </select>
 </div>
-        <h2>🏆 Rank</h2>
-
+      
         <table style={styles.table}>
           <thead style={styles.th}>
             <tr>
