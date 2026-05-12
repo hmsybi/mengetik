@@ -83,6 +83,7 @@ function acakText() {
 }
 
 export default function App() {
+  const [filterKelas, setFilterKelas] = useState("ALL");
   const rankingRef = useRef(null);
 
   const [kelas, setKelas] = useState("");
@@ -196,14 +197,19 @@ export default function App() {
     }
   });
 
-  const ranked = Object.values(best)
-    .sort(
-      (a, b) =>
-        b.score - a.score ||
-        b.correct - a.correct ||
-        b.wpm - a.wpm
-    )
-    .map((r, i) => ({ ...r, rank: i + 1 }));
+ const ranked = Object.values(best)
+  .filter((r) =>
+    filterKelas === "ALL"
+      ? true
+      : r.kelas === filterKelas
+  )
+  .sort(
+    (a, b) =>
+      b.score - a.score ||
+      b.correct - a.correct ||
+      b.wpm - a.wpm
+  )
+  .map((r, i) => ({ ...r, rank: i + 1 }));
 
   return (
     <div style={styles.page}>
@@ -289,6 +295,30 @@ export default function App() {
       </div>
 
       <div style={styles.card} ref={rankingRef}>
+        <div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15
+  }}
+>
+  <h2>🏆 Rank</h2>
+
+  <select
+    value={filterKelas}
+    onChange={(e) => setFilterKelas(e.target.value)}
+    style={{
+      padding: 10,
+      borderRadius: 8
+    }}
+  >
+    <option value="ALL">Semua Kelas</option>
+    <option value="5">Kelas 5</option>
+    <option value="6AG">Kelas 6 AG</option>
+    <option value="6TBZ">Kelas 6 TBZ</option>
+  </select>
+</div>
         <h2>🏆 Rank</h2>
 
         <table style={styles.table}>
